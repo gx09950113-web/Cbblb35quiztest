@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動題庫小遊戲</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <div id="status-bar">
+                今日剩餘次數：<span id="chance-count">5</span>
+                代幣餘額：<span id="token-balance">0</span>
+            </div>
+        </header>
+
+        <main id="quiz-area">
+            <div id="question-text">載入中...</div>
+            <div id="options-container"></div>
+            <button id="next-btn" style="display:none;">下一題</button>
+        </main>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/ui.js"></script>
+</body>
+</html>
