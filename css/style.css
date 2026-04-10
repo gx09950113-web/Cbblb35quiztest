@@ -1,0 +1,92 @@
+/* 基本樣式與背景 */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Microsoft JhengHei", sans-serif;
+    background: linear-gradient(135deg, #1a1c2c 0%, #4a192c 100%); /* 深色漸層背景 */
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-container {
+    width: 90%;
+    max-width: 500px;
+    padding: 20px;
+}
+
+/* 狀態欄 */
+#status-bar {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* 半透明卡牌樣式 */
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* 題目文字 */
+#question-text {
+    font-size: 1.2rem;
+    line-height: 1.5;
+    text-align: center;
+}
+
+/* 選項按鈕 */
+.option-btn {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 15px;
+    color: white;
+    text-align: left;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.option-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* 選中狀態 */
+.option-btn.selected {
+    background: rgba(255, 215, 0, 0.3); /* 金色半透明 */
+    border-color: #ffd700;
+}
+
+/* 控制按鈕容器 (返回/下一題) */
+.nav-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.nav-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+}
+
+.nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
