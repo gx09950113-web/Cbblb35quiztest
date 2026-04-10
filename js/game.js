@@ -1,106 +1,158 @@
-// 遊戲狀態設定
+/**
+ * game.js - 核心遊戲邏輯
+ */
+
+// 遊戲設定
 const GAME_CONFIG = {
     totalQuestionsToPick: 5,        // 每次玩抽 5 題
     dailyLimit: 5,                 // 每日限玩 5 次
     jsonPath: './data/quiz35.json' // JSON 檔案路徑
 };
 
-let currentQuizSet = []; // 當前抽出的 5 題
-let userAnswers = [];    // 玩家在某一題勾選的選項
-let correctCount = 0;    // 玩家答對的題數
+// 遊戲狀態變數
+let allQuestions = [];      // 原始 150 題題庫
+let currentQuizSet = [];    // 當前抽出的 5 題內容
+let answersTempRecord = [[], [], [], [], []]; // 紀錄玩家在 5 題中分別選了什麼
 let currentQuestionIndex = 0;
+let userAnswers = [];       // 當前題目玩家勾選的標籤 (例如 ['A', 'C'])
 
-// 1. 初始化遊戲：檢查次數並載入題庫
+/**
+ * 1. 頁面載入後初始化
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    initGame();
+});
+
 async function initGame() {
-    // 檢查今日剩餘次數 (調用 storage.js 的功能)
+    // 檢查今日剩餘次數 (調用 storage.js)
     const remainingChances = checkDailyChances(GAME_CONFIG.dailyLimit);
-    if (remainingChances <= 0) {
-        alert("今日遊玩次數已達上限，請明天再試！");
-        return;
-    }
-
+    
+    // 如果還有剩餘次數，則載入題庫
     try {
         const response = await fetch(GAME_CONFIG.jsonPath);
-        const allQuestions = await response.json();
+        allQuestions = await response.json();
         
-        // 從 150 題中隨機抽 5 題
-        currentQuizSet = getRandomQuestions(allQuestions, GAME_CONFIG.totalQuestionsToPick);
-        
-        startQuiz();
+        // 若次數沒了，雖然載入題庫但鎖定開始按鈕 (這部分可配合 UI 顯示)
+        if (remainingChances <= 0) {
+            document.getElementById('question-text').innerText = "今日遊玩次數已達上限，請明天再試！";
+            document.getElementById('options-container').innerHTML = "";
+            return;
+        }
+
+        startNewChallenge();
     } catch (error) {
         console.error("題庫載入失敗:", error);
+        document.getElementById('question-text').innerText = "題庫連線失敗，請檢查 data/quiz35.json 是否存在。";
     }
 }
 
-// 2. 隨機抽題邏輯
+/**
+ * 2. 開始一場新的挑戰
+ */
+function startNewChallenge() {
+    // 從題庫中隨機抽出 5 題
+    currentQuizSet = getRandomQuestions(allQuestions, GAME_CONFIG.totalQuestionsToPick);
+    
+    // 重置遊戲狀態
+    currentQuestionIndex = 0;
+    answersTempRecord = [[], [], [], [], []];
+    
+    renderQuestion();
+}
+
+/**
+ * 3. 隨機抽題與打亂邏輯 (Fisher-Yates Shuffle)
+ */
 function getRandomQuestions(array, n) {
     const shuffled = [...array].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, n);
 }
 
-// 3. 開始挑戰
-function startQuiz() {
-    currentQuestionIndex = 0;
-    correctCount = 0;
-    renderQuestion();
-}
-
-// 4. 渲染題目與「打亂選項」
+/**
+ * 4. 渲染題目 (由 UI 調用)
+ */
 function renderQuestion() {
     const questionData = currentQuizSet[currentQuestionIndex];
-    userAnswers = []; // 清空上一題的答案
     
-    // 準備選項：將 A,B,C,D 內容與其原始標籤(A/B/C/D)綁定
+    // 讀取這題之前的勾選紀錄 (如果是從下一題點「上一題」回來的)
+    userAnswers = [...answersTempRecord[currentQuestionIndex]];
+    
+    // 準備選項並打亂
     let options = [
         { label: 'A', text: questionData.選項A },
         { label: 'B', text: questionData.選項B },
         { label: 'C', text: questionData.選項C },
         { label: 'D', text: questionData.選項D }
     ];
-
-    // 打亂選項順序
     options = options.sort(() => 0.5 - Math.random());
 
-    // 調用 UI 渲染函數 (預計寫在 ui.js)
-    displayQuestionUI(questionData.題目, options);
+    // 呼叫 ui.js 的渲染功能
+    if (typeof displayQuestionUI === 'function') {
+        displayQuestionUI(questionData.題目, options);
+    }
 }
 
-// 5. 驗證答案：【核心修改：需全對才算對】
-function submitAnswer() {
-    const questionData = currentQuizSet[currentQuestionIndex];
-    
-    // 取得正確答案陣列，例如 "A,C" -> ["A", "C"]
-    const correctLabels = questionData.正確答案.split(',').map(s => s.trim());
-    
-    // 驗證邏輯：
-    // 1. 玩家選的數量要跟正確答案數量一致
-    // 2. 玩家選的每一個標籤都要在正確答案清單裡
-    const isAllCorrect = 
-        userAnswers.length === correctLabels.length &&
-        userAnswers.every(val => correctLabels.includes(val));
+/**
+ * 5. 保存當前進度 (當點擊上一題或下一題時呼叫)
+ */
+function saveCurrentProgress() {
+    answersTempRecord[currentQuestionIndex] = [...userAnswers];
+}
 
-    if (isAllCorrect) {
-        correctCount++;
+/**
+ * 6. 返回上一題
+ */
+function prevQuestion() {
+    if (currentQuestionIndex > 0) {
+        saveCurrentProgress();
+        currentQuestionIndex--;
+        renderQuestion();
     }
+}
 
-    // 進入下一題或結算
+/**
+ * 7. 進入下一題或提交
+ */
+function handleNextStep() {
+    saveCurrentProgress();
+    
     if (currentQuestionIndex < GAME_CONFIG.totalQuestionsToPick - 1) {
         currentQuestionIndex++;
         renderQuestion();
     } else {
+        // 最後一題提交，執行結算
         finishGame();
     }
 }
 
-// 6. 遊戲結束與結算
+/**
+ * 8. 最終結算邏輯
+ */
 function finishGame() {
-    // 扣除一次每日次數
-    reduceChance();
-    
-    // 根據答對題數發放代幣 (1-5個)
-    const tokensEarned = correctCount; 
-    addTokens(tokensEarned);
+    let correctTotal = 0;
 
-    alert(`遊戲結束！你答對了 ${correctCount} 題，獲得 ${tokensEarned} 個代幣。`);
-    location.reload(); // 重新整理頁面回到初始狀態
+    // 逐題比對答案
+    currentQuizSet.forEach((question, index) => {
+        const playerAns = answersTempRecord[index]; // 玩家選的 ['A', 'C']
+        const correctAns = question.正確答案.split(',').map(s => s.trim()); // 正確的 ['A', 'C']
+        
+        // 判定標準：必須全選對（長度一致且標籤完全吻合）
+        const isAllCorrect = 
+            playerAns.length === correctAns.length &&
+            playerAns.every(val => correctAns.includes(val));
+            
+        if (isAllCorrect) {
+            correctTotal++;
+        }
+    });
+
+    // 執行資料儲存 (調用 storage.js)
+    reduceChance();
+    addTokens(correctTotal);
+
+    // 顯示結果 (不顯示正確答案，只顯示獲得代幣)
+    alert(`挑戰結束！\n本次答對題數：${correctTotal} 題\n獲得代幣：${correctTotal} 個\n\n感謝參與，請明天再來！`);
+    
+    // 回到主畫面或重新整理
+    location.reload();
 }
