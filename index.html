@@ -7,23 +7,33 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
     <div id="game-container">
-        <header>
-            <div id="status-bar">
-                今日剩餘次數：<span id="chance-count">5</span>
-                代幣餘額：<span id="token-balance">0</span>
-            </div>
+        <header id="status-bar" class="card">
+            <div>今日剩餘次數：<span id="chance-count">5</span></div>
+            <div>代幣餘額：<span id="token-balance">0</span></div>
         </header>
 
         <main id="quiz-area">
-            <div id="question-text">載入中...</div>
-            <div id="options-container"></div>
-            <button id="next-btn" style="display:none;">下一題</button>
+            <div id="question-card" class="card">
+                <div id="question-text">正在載入題庫，請稍候...</div>
+            </div>
+
+            <div id="options-container">
+                </div>
+
+            <div class="nav-controls">
+                </div>
         </main>
+
+        <footer style="text-align: center; margin-top: 20px; font-size: 0.8rem; opacity: 0.5;">
+            &copy; 2026 互動題庫系統
+        </footer>
     </div>
 
     <script src="js/storage.js"></script>
-    <script src="js/game.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+
 </body>
 </html>
